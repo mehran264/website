@@ -1,15 +1,35 @@
-FROM ubuntu
-# Install NGINX
-RUN apt-get -y update
-RUN apt-get -y install nginx
+# Stage 1: Build the website
+FROM node:14 as builder
 
-# Add default configuration
-COPY conf/jenkins.conf /etc/nginx/conf.d/jenkins.conf
-COPY conf/nginx.conf /etc/nginx/nginx.conf
+WORKDIR /app
 
-RUN rm /etc/nginx/nginx.conf /etc/nginx/conf.d/default.conf
-COPY . /usr/share/nginx/html
-COPY conf /etc/nginx
+# Copy package.json and package-lock.json to the container
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy the source code to the container
+COPY . .
+
+# Build the website
+RUN npm run build
+
+
+# Stage 2: Deploy with NGINX
+FROM nginx:latest
+
+# Remove the default NGINX configuration
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy the built website from the previous stage to the NGINX directory
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy the custom NGINX configuration file to the container
+COPY nginx.conf /etc/nginx/conf.d
+
+# Expose the NGINX port
 EXPOSE 80
 
-CMD ["nginx"]
+# Start NGINX
+CMD ["nginx", "-g", "daemon off;"]

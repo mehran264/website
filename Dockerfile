@@ -1,19 +1,4 @@
-# Stage 1: Build the website
-FROM node:14 as builder
-
-WORKDIR /app
-
-# Copy package.json and package-lock.json to the container
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy the source code to the container
-COPY . .
-
-# Build the website
-RUN npm run build
+FROM mehran264/website as builder
 
 
 # Stage 2: Deploy with NGINX

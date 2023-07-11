@@ -1,7 +1,4 @@
-FROM mehran264/website as builder
 
-
-# Stage 2: Deploy with NGINX
 FROM nginx:latest
 
 # Remove the default NGINX configuration
